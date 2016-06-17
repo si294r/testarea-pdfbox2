@@ -54,4 +54,32 @@ public class ExtractText
         }
     }
 
+    /**
+     * <a href="http://stackoverflow.com/questions/37862159/pdf-reading-via-pdfbox-in-java">
+     * pdf reading via pdfbox in java 
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/file/d/0B_Ke2amBgdpebm96U05FcWFsSXM/view?usp=sharing">
+     * Bal_532935_0314.pdf
+     * </a>
+     * <p>
+     * The issue here is caused by PDFBox guessing an encoding. The underlying method
+     * `PDFTextStreamEngine.showGlyph` does this for all unmappable glyphs from simple
+     * fonts.
+     * </p>
+     */
+    @Test
+    public void testExtractTestFromBal_532935_0314() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("Bal_532935_0314.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* Bal_532935_0314.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "Bal_532935_0314.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
