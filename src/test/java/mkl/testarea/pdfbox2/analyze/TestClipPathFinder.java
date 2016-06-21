@@ -33,7 +33,7 @@ public class TestClipPathFinder
     {
         try (InputStream resource = getClass().getResourceAsStream("test-pdf4.pdf"))
         {
-            System.out.println("test-pdf4.pdf:");
+            System.out.println("test-pdf4.pdf");
             PDDocument document = PDDocument.load(resource);
             PDPage page = document.getPage(0);
             ClipPathFinder finder = new ClipPathFinder(page);
