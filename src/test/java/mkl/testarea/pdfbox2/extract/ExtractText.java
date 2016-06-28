@@ -82,4 +82,35 @@ public class ExtractText
             Files.write(new File(RESULT_FOLDER, "Bal_532935_0314.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="http://stackoverflow.com/questions/38057338/pdfbox-symbolic-fonts-must-have-a-built-in-encoding-error-when-using-pdftextst">
+     * PDFBox “Symbolic fonts must have a built-in encoding” error when using PDFTextStripper.getText()
+     * </a>
+     * <br/>
+     * <a href="http://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Park_Efficient_and_Robust_CVPR_2016_paper.pdf">
+     * Park_Efficient_and_Robust_CVPR_2016_paper.pdf
+     * </a>
+     * <br/>
+     * Issue <a href="https://issues.apache.org/jira/browse/PDFBOX-3403">PDFBOX-3403</a>
+     * <p>
+     * The issue here is caused by PDFBox not knowing MacExpertEncoding yet. But even
+     * if there was no known base encoding, there is no need for the exception at all
+     * as all font glyphs are covered in the Differences array.
+     * </p>
+     */
+    @Test
+    public void testPark_Efficient_and_Robust_CVPR_2016_paper() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("Park_Efficient_and_Robust_CVPR_2016_paper.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* Park_Efficient_and_Robust_CVPR_2016_paper.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "Park_Efficient_and_Robust_CVPR_2016_paper.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
