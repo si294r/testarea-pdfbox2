@@ -113,4 +113,33 @@ public class ExtractText
             Files.write(new File(RESULT_FOLDER, "Park_Efficient_and_Robust_CVPR_2016_paper.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="http://stackoverflow.com/questions/38975091/pdfbox-gettext-not-returning-all-of-the-visible-text">
+     * PDFBox getText not returning all of the visible text
+     * </a>
+     * <br>
+     * <a href="https://dl.dropboxusercontent.com/u/14898138/03%20WP%20Enterprise%20BlackBerry%20Compete%20Datasheet_041612%20FINAL%20DRAFT.pdf">
+     * 03 WP Enterprise BlackBerry Compete Datasheet_041612 FINAL DRAFT.pdf
+     * </a>
+     * <p>
+     * There is some 'writing' actually done using vector graphics, not text,
+     * but aside from that all is accounted for.
+     * </p>
+     */
+    @Test
+    public void test03WpEnterpriseBlackBerryCompeteDatasheet_041612FinalDraft() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("03 WP Enterprise BlackBerry Compete Datasheet_041612 FINAL DRAFT.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* 03 WP Enterprise BlackBerry Compete Datasheet_041612 FINAL DRAFT.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "03 WP Enterprise BlackBerry Compete Datasheet_041612 FINAL DRAFT.txt").toPath(), Collections.singleton(text));
+        }
+    }
+
 }
