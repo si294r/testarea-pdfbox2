@@ -90,6 +90,7 @@ public class ShowFormFieldNames
             return Collections.emptyList();
 
         return StreamSupport.stream(pdAcroForm.getFieldTree().spliterator(), false)
+                            .filter(field -> (field instanceof PDTerminalField))
                             .map(field -> field.getFullyQualifiedName())
                             .collect(Collectors.toList());
     }
