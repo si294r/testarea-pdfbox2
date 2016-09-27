@@ -4,9 +4,11 @@ package mkl.testarea.pdfbox2.form;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -68,9 +70,43 @@ public class FillInForm
             }
 
             // Save and close the filled out form.
-            pdfDocument.save(new File(RESULT_FOLDER, "FillFormField.pdf"));
+            pdfDocument.save(new File(RESULT_FOLDER, "FillFormFieldRichardBrown.pdf"));
             pdfDocument.close();
         }
     }
 
+    /**
+     * <a href="http://stackoverflow.com/questions/39720305/ufffd-is-not-available-in-this-fonts-encoding-winansiencoding">
+     * U+FFFD is not available in this font's encoding: WinAnsiEncoding
+     * </a>
+     * <p>
+     * The issue cannot be reproduced.
+     * </p>
+     */
+    @Test
+    public void testFillLikeStDdt() throws IOException
+    {
+        try (   InputStream originalStream = getClass().getResourceAsStream("FillFormField.pdf") )
+        {
+            PDDocument pdfDocument = PDDocument.load(originalStream);
+            PDAcroForm acroForm = pdfDocument.getDocumentCatalog().getAcroForm();
+
+            if (acroForm != null)
+            {
+                List<PDField> fields = acroForm.getFields();
+                for (PDField field : fields) {
+                    switch (field.getPartialName()) {
+                        case "Title" /*"devices"*/:
+                            field.setValue("Gerät");
+                            field.setReadOnly(true);
+                            break;
+                    }
+                }
+                acroForm.flatten(fields, true);
+            }
+
+            pdfDocument.save(new File(RESULT_FOLDER, "FillFormFieldStDdt.pdf"));
+            pdfDocument.close();
+        }
+    }
 }
