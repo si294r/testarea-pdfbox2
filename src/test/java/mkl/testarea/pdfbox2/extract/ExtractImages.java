@@ -162,65 +162,101 @@ public class ExtractImages
         try (   InputStream resource = getClass().getResourceAsStream("10948-new.pdf"))
         {
             PDDocument document = PDDocument.load(resource);
-            int page = 1;
-            for (final PDPage pdPage : document.getPages())
+            extractPageImages(document, "10948-new-engine-%s-%s.%s");
+        }
+    }
+
+    /**
+     * <a href="http://stackoverflow.com/questions/40531871/how-can-i-check-if-pdf-page-is-imagescanned-by-pdfbox-xpdf">
+     * How can I check if PDF page is image(scanned) by PDFBOX, XPDF
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=0B9izTHWJQ7xlY1lpVERlZm9kRkk">
+     * t1_edited.pdf
+     * </a>
+     * <p>
+     * In contrast to the OP's observation the extraction works properly here.
+     * </p>
+     */
+    @Test
+    public void testExtractPageImagesT1Edited() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("t1_edited.pdf"))
+        {
+            PDDocument document = PDDocument.load(resource);
+            extractPageImages(document, "t1_edited-engine-%s-%s.%s");
+        }
+    }
+
+    /**
+     * <a href="http://stackoverflow.com/questions/40531871/how-can-i-check-if-pdf-page-is-imagescanned-by-pdfbox-xpdf">
+     * How can I check if PDF page is image(scanned) by PDFBOX, XPDF
+     * </a>
+     * <p>
+     * Here we adopt the technique from the PDFBox tool {@link org.apache.pdfbox.tools.ExtractImages}
+     * and name the exported images properly.
+     * </p>
+     */
+    void extractPageImages(PDDocument document, String fileNameFormat) throws IOException
+    {
+        int page = 1;
+        for (final PDPage pdPage : document.getPages())
+        {
+            final int currentPage = page;
+            PDFGraphicsStreamEngine pdfGraphicsStreamEngine = new PDFGraphicsStreamEngine(pdPage)
             {
-                final int currentPage = page;
-                PDFGraphicsStreamEngine pdfGraphicsStreamEngine = new PDFGraphicsStreamEngine(pdPage)
+                int index = 0;
+                
+                @Override
+                public void drawImage(PDImage pdImage) throws IOException
                 {
-                    int index = 0;
-                    
-                    @Override
-                    public void drawImage(PDImage pdImage) throws IOException
+                    if (pdImage instanceof PDImageXObject)
                     {
-                        if (pdImage instanceof PDImageXObject)
-                        {
-                            PDImageXObject image = (PDImageXObject)pdImage;
-                            File file = new File(RESULT_FOLDER, String.format("10948-new-engine-%s-%s.%s", currentPage, index, image.getSuffix()));
-                            ImageIOUtil.writeImage(image.getImage(), image.getSuffix(), new FileOutputStream(file));
-                            index++;
-                        }
+                        PDImageXObject image = (PDImageXObject)pdImage;
+                        File file = new File(RESULT_FOLDER, String.format(fileNameFormat, currentPage, index, image.getSuffix()));
+                        ImageIOUtil.writeImage(image.getImage(), image.getSuffix(), new FileOutputStream(file));
+                        index++;
                     }
+                }
 
-                    @Override
-                    public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) throws IOException { }
+                @Override
+                public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) throws IOException { }
 
-                    @Override
-                    public void clip(int windingRule) throws IOException { }
+                @Override
+                public void clip(int windingRule) throws IOException { }
 
-                    @Override
-                    public void moveTo(float x, float y) throws IOException {  }
+                @Override
+                public void moveTo(float x, float y) throws IOException {  }
 
-                    @Override
-                    public void lineTo(float x, float y) throws IOException { }
+                @Override
+                public void lineTo(float x, float y) throws IOException { }
 
-                    @Override
-                    public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) throws IOException {  }
+                @Override
+                public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) throws IOException {  }
 
-                    @Override
-                    public Point2D getCurrentPoint() throws IOException { return null; }
+                @Override
+                public Point2D getCurrentPoint() throws IOException { return null; }
 
-                    @Override
-                    public void closePath() throws IOException { }
+                @Override
+                public void closePath() throws IOException { }
 
-                    @Override
-                    public void endPath() throws IOException { }
+                @Override
+                public void endPath() throws IOException { }
 
-                    @Override
-                    public void strokePath() throws IOException { }
+                @Override
+                public void strokePath() throws IOException { }
 
-                    @Override
-                    public void fillPath(int windingRule) throws IOException { }
+                @Override
+                public void fillPath(int windingRule) throws IOException { }
 
-                    @Override
-                    public void fillAndStrokePath(int windingRule) throws IOException { }
+                @Override
+                public void fillAndStrokePath(int windingRule) throws IOException { }
 
-                    @Override
-                    public void shadingFill(COSName shadingName) throws IOException { }
-                };
-                pdfGraphicsStreamEngine.processPage(pdPage);
-                page++;
-            }
+                @Override
+                public void shadingFill(COSName shadingName) throws IOException { }
+            };
+            pdfGraphicsStreamEngine.processPage(pdPage);
+            page++;
         }
     }
 }
