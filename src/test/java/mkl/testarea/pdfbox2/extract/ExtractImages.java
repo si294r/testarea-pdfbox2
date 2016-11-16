@@ -17,6 +17,7 @@ import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.tools.imageio.ImageIOUtil;
+import org.apache.pdfbox.util.Matrix;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -162,7 +163,7 @@ public class ExtractImages
         try (   InputStream resource = getClass().getResourceAsStream("10948-new.pdf"))
         {
             PDDocument document = PDDocument.load(resource);
-            extractPageImages(document, "10948-new-engine-%s-%s.%s");
+            extractPageImages(document, "10948-new-engine-%s-%s%s.%s");
         }
     }
 
@@ -184,7 +185,7 @@ public class ExtractImages
         try (   InputStream resource = getClass().getResourceAsStream("t1_edited.pdf"))
         {
             PDDocument document = PDDocument.load(resource);
-            extractPageImages(document, "t1_edited-engine-%s-%s.%s");
+            extractPageImages(document, "t1_edited-engine-%s-%s%s.%s");
         }
     }
 
@@ -212,8 +213,16 @@ public class ExtractImages
                 {
                     if (pdImage instanceof PDImageXObject)
                     {
+                        Matrix ctm = getGraphicsState().getCurrentTransformationMatrix();
+                        String flips = "";
+                        if (ctm.getScaleX() < 0)
+                            flips += "h";
+                        if (ctm.getScaleY() < 0)
+                            flips += "v";
+                        if (flips.length() > 0)
+                            flips = "-" + flips;
                         PDImageXObject image = (PDImageXObject)pdImage;
-                        File file = new File(RESULT_FOLDER, String.format(fileNameFormat, currentPage, index, image.getSuffix()));
+                        File file = new File(RESULT_FOLDER, String.format(fileNameFormat, currentPage, index, flips, image.getSuffix()));
                         ImageIOUtil.writeImage(image.getImage(), image.getSuffix(), new FileOutputStream(file));
                         index++;
                     }
