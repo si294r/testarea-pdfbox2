@@ -193,6 +193,28 @@ public class ExtractImages
      * <a href="http://stackoverflow.com/questions/40531871/how-can-i-check-if-pdf-page-is-imagescanned-by-pdfbox-xpdf">
      * How can I check if PDF page is image(scanned) by PDFBOX, XPDF
      * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=0B9izTHWJQ7xldkVPRHFWU1picGs">
+     * 1604-Orange_flat_2_edited.pdf
+     * </a>
+     * <p>
+     * This image comes in stripes. Nothing unusual.
+     * </p>
+     */
+    @Test
+    public void testExtractPageImages1604OrangeFlat2Edited() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("1604-Orange_flat_2_edited.pdf"))
+        {
+            PDDocument document = PDDocument.load(resource);
+            extractPageImages(document, "1604-Orange_flat_2_edited-engine-%s-%s%s.%s");
+        }
+    }
+
+    /**
+     * <a href="http://stackoverflow.com/questions/40531871/how-can-i-check-if-pdf-page-is-imagescanned-by-pdfbox-xpdf">
+     * How can I check if PDF page is image(scanned) by PDFBOX, XPDF
+     * </a>
      * <p>
      * Here we adopt the technique from the PDFBox tool {@link org.apache.pdfbox.tools.ExtractImages}
      * and name the exported images properly.
