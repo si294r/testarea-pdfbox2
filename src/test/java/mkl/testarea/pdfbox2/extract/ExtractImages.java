@@ -215,6 +215,28 @@ public class ExtractImages
      * <a href="http://stackoverflow.com/questions/40531871/how-can-i-check-if-pdf-page-is-imagescanned-by-pdfbox-xpdf">
      * How can I check if PDF page is image(scanned) by PDFBOX, XPDF
      * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=0B9izTHWJQ7xlQkRHMmtIU2ZPUDA">
+     * test_fact.pdf
+     * </a>
+     * <p>
+     * The logo actually is the only bitmp image here.
+     * </p>
+     */
+    @Test
+    public void testExtractPageImagesTestFact() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("test_fact.pdf"))
+        {
+            PDDocument document = PDDocument.load(resource);
+            extractPageImages(document, "test_fact-engine-%s-%s%s.%s");
+        }
+    }
+
+    /**
+     * <a href="http://stackoverflow.com/questions/40531871/how-can-i-check-if-pdf-page-is-imagescanned-by-pdfbox-xpdf">
+     * How can I check if PDF page is image(scanned) by PDFBOX, XPDF
+     * </a>
      * <p>
      * Here we adopt the technique from the PDFBox tool {@link org.apache.pdfbox.tools.ExtractImages}
      * and name the exported images properly.
