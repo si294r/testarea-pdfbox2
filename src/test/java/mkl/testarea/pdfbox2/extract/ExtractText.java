@@ -40,7 +40,7 @@ public class ExtractText
      * </p>
      */
     @Test
-    public void testExtractTestFromPnL_500010_0314() throws IOException
+    public void testPnL_500010_0314() throws IOException
     {
         try (   InputStream resource = getClass().getResourceAsStream("PnL_500010_0314.pdf")    )
         {
@@ -69,7 +69,7 @@ public class ExtractText
      * </p>
      */
     @Test
-    public void testExtractTestFromBal_532935_0314() throws IOException
+    public void testBal_532935_0314() throws IOException
     {
         try (   InputStream resource = getClass().getResourceAsStream("Bal_532935_0314.pdf")    )
         {
