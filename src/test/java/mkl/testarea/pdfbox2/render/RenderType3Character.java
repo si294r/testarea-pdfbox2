@@ -91,7 +91,7 @@ public class RenderType3Character
                     PDPageContentStream charContentStream = new PDPageContentStream(charDocument, charPage);
                     charContentStream.beginText();
                     charContentStream.setFont(fontF1, bbox.getHeight());
-                    charContentStream.getOutput().write(String.format("<%X2> Tj\n", code).getBytes());
+                    charContentStream.getOutput().write(String.format("<%2X> Tj\n", code).getBytes());
                     charContentStream.endText();
                     charContentStream.close();
 
@@ -99,6 +99,7 @@ public class RenderType3Character
                     PDFRenderer renderer = new PDFRenderer(charDocument);
                     BufferedImage image = renderer.renderImageWithDPI(0, 96);
                     ImageIO.write(image, "PNG", result);
+                    charDocument.save(new File(RESULT_FOLDER, String.format("4700198773-%s-%s.pdf", key.getName(), code)));
                     charDocument.close();
                 }
             }
