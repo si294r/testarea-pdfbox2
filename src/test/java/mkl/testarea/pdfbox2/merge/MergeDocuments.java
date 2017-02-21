@@ -1,10 +1,14 @@
 package mkl.testarea.pdfbox2.merge;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -59,6 +63,86 @@ public class MergeDocuments
 //            List<String> marcadores = Collections.emptyList();
             concatena(resource1, resource2, result, marcadores);
         }
+    }
+
+    /**
+     * <a href="http://stackoverflow.com/questions/42283777/pdfbox-writing-compressed-object-streams">
+     * pdfbox writing compressed object streams
+     * </a>
+     * <br/>
+     * <a href="https://www.dropbox.com/sh/elbjegfykxux6wf/AAC8SMU6-7_sAPS7yqgZkDn0a?dl=0">
+     * "00002 - Distribuição - dia 10.11.2016.pdf",
+     * "00041 - Digitação de Documentos - dia 10.11.2016.pdf",
+     * "00041 - Digitação de Documentos - dia 10.11.2016_00042 - Citação para Processo Eletrônico - dia 10.11.2016.pdf"
+     * "00043 - Juntada de AR - dia 10.01.2017.pdf"
+     * "00043 - Juntada de AR - dia 10.01.2017_00044 - 37880-20- - dia 10.01.2017.pdf"
+     * "00046 - Ato Ordinatório Praticado - dia 16.01.2017.pdf"
+     * "00047 - Envio de Documento Eletrônico - dia 16.01.2017.pdf"
+     * "00049 - Juntada - dia 23.01.2017.pdf"
+     * "00049 - Juntada - dia 23.01.2017_00050 - 201700130770 - Petição Eletrônica - dia 23.01.2017.pdf"
+     * "00049 - Juntada - dia 23.01.2017_00050 - 201700130770 - Petição Eletrônica - dia 23.01.2017_00051 - Anexo de Documento - dia 23.01.2017.pdf"
+     * "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016.pdf"
+     * "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00011 - Anexo de Documento - dia 10.11.2016.pdf"
+     * "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00012 - Anexo de Documento - dia 10.11.2016.pdf"
+     * "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00013 - Anexo de Documento - dia 10.11.2016.pdf"
+     * "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00036 - Anexo de Documento - dia 10.11.2016.pdf"
+     * "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00040 - Anexo de Documento - dia 10.11.2016.pdf"  
+     * </a>
+     * <p>
+     * Using the OP's code the result indeed is exorbitantly large: the individual
+     * file sizes add up to about 5 MB but the OP's concatenation is about 25 MB
+     * in size. The cause is that the OP did not reset his ByteArrayOutputStream
+     * containing the intermediary concatenations, so the result file effectively
+     * contains not only the concatenation of the inputs but additionally all
+     * intermediary partial concatenations, too. Actually this only works because
+     * PDFBox repairs the inputs under the hood. Resetting the ByteArrayOutputStream
+     * at the start of the loop results in the clean desired concatenation with a
+     * size of about 5 MB.
+     * </p>
+     */
+    @Test
+    public void testMergeManyLikeArthurMenezes() throws IOException
+    {
+        Collection<String> resourceNames = Arrays.asList(
+                "00002 - Distribuição - dia 10.11.2016.pdf",
+                "00041 - Digitação de Documentos - dia 10.11.2016.pdf",
+                "00041 - Digitação de Documentos - dia 10.11.2016_00042 - Citação para Processo Eletrônico - dia 10.11.2016.pdf",
+                "00043 - Juntada de AR - dia 10.01.2017.pdf",
+                "00043 - Juntada de AR - dia 10.01.2017_00044 - 37880-20- - dia 10.01.2017.pdf",
+                "00046 - Ato Ordinatório Praticado - dia 16.01.2017.pdf",
+                "00047 - Envio de Documento Eletrônico - dia 16.01.2017.pdf",
+                "00049 - Juntada - dia 23.01.2017.pdf",
+                "00049 - Juntada - dia 23.01.2017_00050 - 201700130770 - Petição Eletrônica - dia 23.01.2017.pdf",
+                "00049 - Juntada - dia 23.01.2017_00050 - 201700130770 - Petição Eletrônica - dia 23.01.2017_00051 - Anexo de Documento - dia 23.01.2017.pdf",
+                "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016.pdf",
+                "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00011 - Anexo de Documento - dia 10.11.2016.pdf",
+                "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00012 - Anexo de Documento - dia 10.11.2016.pdf",
+                "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00013 - Anexo de Documento - dia 10.11.2016.pdf",
+                "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00036 - Anexo de Documento - dia 10.11.2016.pdf",
+                "Petição Incial - dia 10.11.2016_00003 - Petição Inicial - dia 10.11.2016_00040 - Anexo de Documento - dia 10.11.2016.pdf");
+
+        InputStream anterior = null;
+        ByteArrayOutputStream saida = new ByteArrayOutputStream();
+        for (String resourceName : resourceNames)
+        {
+            saida.reset(); // <-- added to fix the OP's code
+            List<String> marcadores = marcadores(resourceName);
+            try (   InputStream novo = getClass().getResourceAsStream(resourceName) )
+            {
+                concatena(anterior, novo, saida, marcadores);                     
+                anterior = new ByteArrayInputStream(saida.toByteArray());
+            }
+        }
+
+        try (OutputStream pdf = new FileOutputStream(new File(RESULT_FOLDER, "MergeManyArthurMenezes.pdf"))  )
+        {
+            saida.writeTo(pdf);
+        }
+    }
+
+    private List<String> marcadores(String name) {
+        String semExtensao = name.substring(0, name.indexOf(".pdf"));
+        return Arrays.asList(semExtensao.split("_"));       
     }
 
     public void concatena(InputStream anterior, InputStream novo, OutputStream saida, List<String> marcadores)
