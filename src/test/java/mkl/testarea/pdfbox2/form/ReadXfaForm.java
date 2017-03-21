@@ -41,7 +41,8 @@ public class ReadXfaForm
      * current revision was loaded.
      * </p>
      * <p>
-     * This appears to be a bug in PDFBox which has been fixed in 2.0.5.
+     * This appears to be a shortcoming in PDFBox which has been fixed in 2.0.5.
+     * But look at {@link #testReadXfaFileFixedLikeMayank()} for the cause.
      * </p>
      */
     @Test
@@ -51,6 +52,42 @@ public class ReadXfaForm
         {
             byte[] xfaData = getParsableXFAForm(resource);
             Files.write(new File(RESULT_FOLDER, "XFA-File.xml").toPath(),  xfaData);
+        }
+    }
+
+    /**
+     * <a href="http://stackoverflow.com/questions/42861499/xfa-building-in-pdfbox-1-8-12-not-in-2-0-4">
+     * XFA building in PDFBox 1.8.12, not in 2.0.4
+     * </a>
+     * <br/>
+     * <a href="https://www.dropbox.com/s/g1akyqtybfiekl5/XFA-File.pdf?dl=0">
+     * XFA-File.pdf
+     * </a>, with the invalid leading whitespaces removed: XFA-File-fixed.pdf
+     * <p>
+     * Upon closer examination of the file it turns out that there are 10
+     * bytes of white spaces before the start of the file. These white spaces
+     * shifted offsets a bit, so PDFBox could not read the cross references
+     * in the regular fashion but instead tried to repair the file.
+     * </p>
+     * <p>
+     * This repair mechanism has been improved considerably in 2.0.5. Thus,
+     * using PDFBox 2.0.5 the file could successfully completely be parsed,
+     * including the most current XFA information, while repair in former
+     * version was incomplete and merely returned the oldest copy of the
+     * XFA form.
+     * </p>
+     * <p>
+     * After fixing the file (i.e. after removing those ten white space
+     * characters), PDFBox 2.0.4 had no problems parsing the file anymore.
+     * </p>
+     */
+    @Test
+    public void testReadXfaFileFixedLikeMayank() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("XFA-File-fixed.pdf")   )
+        {
+            byte[] xfaData = getParsableXFAForm(resource);
+            Files.write(new File(RESULT_FOLDER, "XFA-File-fixed.xml").toPath(),  xfaData);
         }
     }
 
