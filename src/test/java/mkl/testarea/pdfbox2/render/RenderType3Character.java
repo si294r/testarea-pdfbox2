@@ -106,4 +106,74 @@ public class RenderType3Character
         }
     }
 
+    /**
+     * <a href="http://stackoverflow.com/questions/42032729/render-type3-font-character-as-image-using-pdfbox">
+     * Render Type3 font character as image using PDFBox
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/file/d/0B0f6X4SAMh2KRDJTbm4tb3E1a1U/view">
+     * 4700198773.pdf
+     * </a>
+     * from
+     * <a href="http://stackoverflow.com/questions/37754112/extract-text-with-custom-font-result-non-readble">
+     * extract text with custom font result non readble
+     * </a>
+     * <p>
+     * This test shows how one can render individual Type 3 font glyphs as bitmaps.
+     * Unfortunately PDFBox out-of-the-box does not provide a class to render contents
+     * of arbitrary XObjects, merely for rendering pages; thus, we simply create a page
+     * with the glyph in question and render that page.   
+     * </p>
+     * <p>
+     * As the OP did not provide a sample PDF, we simply use one from another
+     * stackoverflow question. There obviously might remain issues with the
+     * OP's files.
+     * </p>
+     */
+    @Test
+    public void testRenderSdnList() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("sdnlist.pdf"))
+        {
+            PDDocument document = PDDocument.load(resource);
+
+            PDPage page = document.getPage(1);
+            PDResources pageResources = page.getResources();
+            COSName f1Name = COSName.getPDFName("R144");
+            PDType3Font fontF1 = (PDType3Font) pageResources.getFont(f1Name);
+            Map<String, Integer> f1NameToCode = fontF1.getEncoding().getNameToCodeMap();
+
+            COSDictionary charProcsDictionary = fontF1.getCharProcs();
+            for (COSName key : charProcsDictionary.keySet())
+            {
+                COSStream stream = (COSStream) charProcsDictionary.getDictionaryObject(key);
+                PDType3CharProc charProc = new PDType3CharProc(fontF1, stream);
+                PDRectangle bbox = charProc.getGlyphBBox();
+                if (bbox == null)
+                    bbox = charProc.getBBox();
+                Integer code = f1NameToCode.get(key.getName());
+
+                if (code != null)
+                {
+                    PDDocument charDocument = new PDDocument();
+                    PDPage charPage = new PDPage(bbox);
+                    charDocument.addPage(charPage);
+                    charPage.setResources(pageResources);
+                    PDPageContentStream charContentStream = new PDPageContentStream(charDocument, charPage);
+                    charContentStream.beginText();
+                    charContentStream.setFont(fontF1, bbox.getHeight());
+                    charContentStream.getOutput().write(String.format("<%2X> Tj\n", code).getBytes());
+                    charContentStream.endText();
+                    charContentStream.close();
+
+                    File result = new File(RESULT_FOLDER, String.format("sdnlist-%s-%s.png", key.getName(), code));
+                    PDFRenderer renderer = new PDFRenderer(charDocument);
+                    BufferedImage image = renderer.renderImageWithDPI(0, 96);
+                    ImageIO.write(image, "PNG", result);
+                    charDocument.save(new File(RESULT_FOLDER, String.format("sdnlist-%s-%s.pdf", key.getName(), code)));
+                    charDocument.close();
+                }
+            }
+        }
+    }
 }

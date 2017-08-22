@@ -99,7 +99,8 @@ public class CreateCheckBox
             pdAnnotationWidget.setAppearance(pdAppearanceDictionary);
         }
 
-        checkBox.check();
+        checkBox.setReadOnly(true);
+        checkBox.unCheck();
 
         document.save(new File(RESULT_FOLDER, "CheckBox.pdf"));
         document.close();
