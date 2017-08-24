@@ -86,4 +86,35 @@ public class RenderPage
         }
     }
 
+    /**
+     * <a href="https://stackoverflow.com/questions/45831641/read-pdf-written-in-chinese-using-java">
+     * read pdf written in chinese using java
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/file/d/0B6k7AYGPEth2djFMNVJ0dC1wLVU/view?usp=sharing">
+     * sample1.pdf
+     * </a>
+     * <p>
+     * Cannot reproduce the problem with the file at hand without concrete
+     * code.
+     * </p>
+     */
+    @Test
+    public void testRenderSample1() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("sample1.pdf"))
+        {
+            PDDocument document = PDDocument.load(resource);
+
+            PDFRenderer renderer = new PDFRenderer(document);
+
+            for (int page = 0; page < document.getNumberOfPages(); page++)
+            {
+                BufferedImage image = renderer.renderImageWithDPI(page, 96);
+
+                File result = new File(RESULT_FOLDER, String.format("sample1-%s.png", page));
+                ImageIO.write(image, "PNG", result);
+            }
+        }
+    }
 }
