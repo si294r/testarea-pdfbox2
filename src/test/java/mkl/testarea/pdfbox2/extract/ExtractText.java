@@ -6,8 +6,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.Map.Entry;
 
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -85,7 +94,7 @@ public class ExtractText
 
     /**
      * <a href="http://stackoverflow.com/questions/38057338/pdfbox-symbolic-fonts-must-have-a-built-in-encoding-error-when-using-pdftextst">
-     * PDFBox “Symbolic fonts must have a built-in encoding” error when using PDFTextStripper.getText()
+     * PDFBox ï¿½Symbolic fonts must have a built-in encodingï¿½ error when using PDFTextStripper.getText()
      * </a>
      * <br/>
      * <a href="http://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Park_Efficient_and_Robust_CVPR_2016_paper.pdf">
@@ -142,4 +151,104 @@ public class ExtractText
         }
     }
 
+    /**
+     * <a href="https://stackoverflow.com/questions/45895768/pdfbox-2-0-7-extracttext-not-working-but-1-8-13-does-and-pdfreader-as-well">
+     * PDFBox 2.0.7 ExtractText not working but 1.8.13 does and PDFReader as well
+     * </a>
+     * <br/>
+     * <a href="https://wetransfer.com/downloads/214674449c23713ee481c5a8f529418320170827201941/b2bea6">
+     * test-2.pdf
+     * </a>
+     * <p>
+     * Due to the broken <b>ToUnicode</b> maps the output of this test is
+     * unsatisfying. It can be improved by removing these <b>ToUnicode</b>
+     * maps, cf. {@link #testNoToUnicodeTest2()}.
+     * </p>
+     */
+    @Test
+    public void testTest2() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("test-2.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* test-2.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "test-2.txt").toPath(), Collections.singleton(text));
+        }
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/45895768/pdfbox-2-0-7-extracttext-not-working-but-1-8-13-does-and-pdfreader-as-well">
+     * PDFBox 2.0.7 ExtractText not working but 1.8.13 does and PDFReader as well
+     * </a>
+     * <br/>
+     * <a href="https://wetransfer.com/downloads/214674449c23713ee481c5a8f529418320170827201941/b2bea6">
+     * test-2.pdf
+     * </a>
+     * <p>
+     * Due to the broken <b>ToUnicode</b> maps the output of immediate text
+     * extraction from this document is unsatisfying, cf. {@link #testTest2()}.
+     * It can be improved by removing these <b>ToUnicode</b> maps as this test
+     * shows.
+     * </p>
+     */
+    @Test
+    public void testNoToUnicodeTest2() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("test-2.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+
+            for (int pageNr = 0; pageNr < document.getNumberOfPages(); pageNr++)
+            {
+                PDPage page = document.getPage(pageNr);
+                PDResources resources = page.getResources();
+                removeToUnicodeMaps(resources);
+            }
+
+            PDFTextStripper stripper = new PDFTextStripper();
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* test-2.pdf without ToUnicode\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "test-2_NoToUnicode.txt").toPath(), Collections.singleton(text));
+        }
+    }
+
+    void removeToUnicodeMaps(PDResources pdResources) throws IOException
+    {
+        COSDictionary resources = pdResources.getCOSObject();
+
+        COSDictionary fonts = asDictionary(resources, COSName.FONT);
+        if (fonts != null)
+        {
+            for (COSBase object : fonts.getValues())
+            {
+                while (object instanceof COSObject)
+                    object = ((COSObject)object).getObject();
+                if (object instanceof COSDictionary)
+                {
+                    COSDictionary font = (COSDictionary)object;
+                    font.removeItem(COSName.TO_UNICODE);
+                }
+            }
+        }
+
+        for (COSName name : pdResources.getXObjectNames())
+        {
+            PDXObject xobject = pdResources.getXObject(name);
+            if (xobject instanceof PDFormXObject)
+            {
+                PDResources xobjectPdResources = ((PDFormXObject)xobject).getResources();
+                removeToUnicodeMaps(xobjectPdResources);
+            }
+        }
+    }
+
+    COSDictionary asDictionary(COSDictionary dictionary, COSName name)
+    {
+        COSBase object = dictionary.getDictionaryObject(name);
+        return object instanceof COSDictionary ? (COSDictionary) object : null;
+    }
 }
