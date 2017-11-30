@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Collections;
-import java.util.Map.Entry;
 
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -251,4 +250,32 @@ public class ExtractText
         COSBase object = dictionary.getDictionaryObject(name);
         return object instanceof COSDictionary ? (COSDictionary) object : null;
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/47515609/invalid-block-type-while-using-pdfbox-2-0-8">
+     * Invalid block type while using pdfbox 2.0.8
+     * </a>
+     * <br>
+     * <a href="https://www.dropbox.com/s/xjeksj0cay4x3vo/NoTemplateInError.pdf?dl=0">
+     * NoTemplateInError.pdf
+     * </a>
+     * <p>
+     * The issue cannot be reproduced.
+     * </p>
+     */
+    @Test
+    public void testNoTemplateInError() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("NoTemplateInError.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* NoTemplateInError.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "NoTemplateInError.txt").toPath(), Collections.singleton(text));
+        }
+    }
+
 }
