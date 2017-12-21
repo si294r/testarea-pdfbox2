@@ -12,6 +12,8 @@ import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.contentstream.operator.OperatorProcessor;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSNumber;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
 import org.apache.pdfbox.rendering.PageDrawer;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -72,6 +74,19 @@ public class PDFVisibleTextStripper extends PDFTextStripper {
         addOperator(new StrokePath());
     }
 
+    float lowerLeftX = 0;
+    float lowerLeftY = 0;
+
+    @Override
+    public void processPage(PDPage page) throws IOException {
+        PDRectangle pageSize = page.getCropBox();
+
+        lowerLeftX = pageSize.getLowerLeftX();
+        lowerLeftY = pageSize.getLowerLeftY();
+
+        super.processPage(page);
+    }
+
     @Override
     protected void processTextPosition(TextPosition text) {
         Matrix textMatrix = text.getTextMatrix();
@@ -80,7 +95,9 @@ public class PDFVisibleTextStripper extends PDFTextStripper {
 
         PDGraphicsState gs = getGraphicsState();
         Area area = gs.getCurrentClippingPath();
-        if (area == null || (area.contains(start.getX(), start.getY()) && ((!checkEndPointToo) || area.contains(end.getX(), end.getY()))))
+        if (area == null ||
+                (area.contains(lowerLeftX + start.getX(), lowerLeftY + start.getY()) &&
+                        ((!checkEndPointToo) || area.contains(lowerLeftX + end.getX(), lowerLeftY + end.getY()))))
             super.processTextPosition(text);
     }
 
@@ -93,7 +110,8 @@ public class PDFVisibleTextStripper extends PDFTextStripper {
                 Matrix textMatrix = text.getTextMatrix();
                 Vector start = textMatrix.transform(new Vector(0, 0));
                 Vector end = new Vector(start.getX() + text.getWidth(), start.getY());
-                if (linePath.contains(start.getX(), start.getY()) || (checkEndPointToo && linePath.contains(end.getX(), end.getY()))) {
+                if (linePath.contains(lowerLeftX + start.getX(), lowerLeftY + start.getY()) ||
+                        (checkEndPointToo && linePath.contains(lowerLeftX + end.getX(), lowerLeftY + end.getY()))) {
                     toRemove.add(text);
                 }
             }

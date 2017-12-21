@@ -81,4 +81,37 @@ public class ExtractVisibleText {
             Files.write(new File(RESULT_FOLDER, "testDmitryK.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/47908124/pdfbox-removing-invisible-text-by-clip-filling-paths-issue">
+     * PDFBox - Removing invisible text (by clip/filling paths issue)
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=1l0Yt9BJXs09bXcBD7pDbxFiZQQqnuaan">
+     * test2.pdf
+     * </a> as test2DmitryK.pdf
+     * <p>
+     * Indeed, even the {@link PDFVisibleTextStripper} implementation as originally
+     * improved for {@link #testTestDmitryK()} failed for this document. The cause
+     * is another normalization by PDFBox text stripping moving the origin into the
+     * lower left corner of the crop box.
+     * </p>
+     * <p>
+     * Patching the {@link PDFVisibleTextStripper} methods to add the lower left
+     * crop box coordinate values again results in a decent extraction of visible
+     * text.
+     * </p>
+     */
+    @Test
+    public void testTest2DmitryK() throws IOException {
+        try (   InputStream resource = getClass().getResourceAsStream("test2DmitryK.pdf")  ) {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFVisibleTextStripper();
+            stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* test2DmitryK.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "test2DmitryK.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
