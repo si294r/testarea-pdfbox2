@@ -40,7 +40,21 @@ import org.apache.pdfbox.util.Vector;
  * @author mkl
  */
 public class PDFVisibleTextStripper extends PDFTextStripper {
+    private boolean checkEndPointToo = false;
+
     public PDFVisibleTextStripper() throws IOException {
+        this(false);
+    }
+
+    /**
+     * @param checkEndPointToo flag whether to also check the end point of the
+     *  character baseline for visibility; if true, the conditions for visibility
+     *  of a character are stricter, but unfortunately the calculation of the
+     *  character baseline end point only work correctly for unrotated text.
+     */
+    public PDFVisibleTextStripper(boolean checkEndPointToo) throws IOException {
+        this.checkEndPointToo = checkEndPointToo;
+
         addOperator(new AppendRectangleToPath());
         addOperator(new ClipEvenOddRule());
         addOperator(new ClipNonZeroRule());
@@ -66,7 +80,7 @@ public class PDFVisibleTextStripper extends PDFTextStripper {
 
         PDGraphicsState gs = getGraphicsState();
         Area area = gs.getCurrentClippingPath();
-        if (area == null || (area.contains(start.getX(), start.getY()) && area.contains(end.getX(), end.getY())))
+        if (area == null || (area.contains(start.getX(), start.getY()) && ((!checkEndPointToo) || area.contains(end.getX(), end.getY()))))
             super.processTextPosition(text);
     }
 
@@ -79,7 +93,7 @@ public class PDFVisibleTextStripper extends PDFTextStripper {
                 Matrix textMatrix = text.getTextMatrix();
                 Vector start = textMatrix.transform(new Vector(0, 0));
                 Vector end = new Vector(start.getX() + text.getWidth(), start.getY());
-                if (linePath.contains(start.getX(), start.getY()) || linePath.contains(end.getX(), end.getY())) {
+                if (linePath.contains(start.getX(), start.getY()) || (checkEndPointToo && linePath.contains(end.getX(), end.getY()))) {
                     toRemove.add(text);
                 }
             }
