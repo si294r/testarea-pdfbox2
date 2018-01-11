@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
@@ -109,8 +110,7 @@ public class CreateImageButton
         try (   InputStream resource = getClass().getResourceAsStream("/mkl/testarea/pdfbox2/content/Willi-1.jpg");
                 InputStream sourceDoc = getClass().getResourceAsStream("imageButton.pdf");
                 PDDocument document = PDDocument.load(sourceDoc)) {
-            BufferedImage bufferedImage = ImageIO.read(resource);
-            PDImageXObject pdImageXObject = LosslessFactory.createFromImage(document, bufferedImage);
+            PDImageXObject pdImageXObject = JPEGFactory.createFromStream(document, resource);
             float width = 10 * pdImageXObject.getWidth();
             float height = 10 * pdImageXObject.getHeight();
 
