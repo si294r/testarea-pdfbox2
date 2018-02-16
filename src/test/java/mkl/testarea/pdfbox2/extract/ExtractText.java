@@ -278,4 +278,30 @@ public class ExtractText
         }
     }
 
+    /**
+     * <a href="https://stackoverflow.com/questions/48828500/again-having-invisible-text-coming-from-pdftextstripper">
+     * Again having invisible text coming from PdfTextStripper
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=1P1oFu8cpZnzy9LF4wiGWPrk3PfL6dktt">
+     * testFailed.pdf
+     * </a>
+     * <p>
+     * The extracted, invisible text is rendered WHITE on WHITE.
+     * </p>
+     */
+    @Test
+    public void testTestFailed() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("testFailed.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* testFailed.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "testFailed.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
