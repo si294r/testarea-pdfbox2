@@ -78,8 +78,49 @@ public class ArrangeText {
                 contentStream.stroke();
             }
 
-            document.save(new File(RESULT_FOLDER, "arrangedText.pdf"));
+            document.save(new File(RESULT_FOLDER, "arrangedTextForTeamotea.pdf"));
         }
     }
 
+    /**
+     * <a href="https://stackoverflow.com/questions/48902656/how-can-i-align-arrange-text-fields-into-two-column-layout-using-apache-pdfbox">
+     * How can I Align/ Arrange text fields into two column layout using Apache PDFBox - java
+     * </a>
+     * <p>
+     * This test shows how to align text in two columns.
+     * </p>
+     */
+    @Test
+    public void testArrangeTextForUser2967784() throws IOException {
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage();
+        document.addPage(page);
+        PDFont fontNormal = PDType1Font.HELVETICA;
+        PDFont fontBold = PDType1Font.HELVETICA_BOLD;
+        PDPageContentStream contentStream =new PDPageContentStream(document, page);
+        contentStream.beginText();
+        contentStream.newLineAtOffset(100, 600);
+        contentStream.setFont(fontBold, 15);
+        contentStream.showText("Name: ");
+        contentStream.setFont(fontNormal, 15);
+        contentStream.showText ("Rajeev");
+        contentStream.newLineAtOffset(200, 00);
+        contentStream.setFont(fontBold, 15);
+        contentStream.showText("Address: " );
+        contentStream.setFont(fontNormal, 15);
+        contentStream.showText ("BNG");
+        contentStream.newLineAtOffset(-200, -20);
+        contentStream.setFont(fontBold, 15);
+        contentStream.showText("State: " );
+        contentStream.setFont(fontNormal, 15);
+        contentStream.showText ("KAR");
+        contentStream.newLineAtOffset(200, 00);
+        contentStream.setFont(fontBold, 15);
+        contentStream.showText("Country: " );
+        contentStream.setFont(fontNormal, 15);
+        contentStream.showText ("INDIA");
+        contentStream.endText();
+        contentStream.close();
+        document.save(new File(RESULT_FOLDER, "arrangedTextForUser2967784.pdf"));
+    }
 }
