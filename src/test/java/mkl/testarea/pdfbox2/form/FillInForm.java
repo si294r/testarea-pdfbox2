@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
@@ -97,7 +99,7 @@ public class FillInForm
                 for (PDField field : fields) {
                     switch (field.getPartialName()) {
                         case "Title" /*"devices"*/:
-                            field.setValue("Gerät");
+                            field.setValue("Gerï¿½t");
                             field.setReadOnly(true);
                             break;
                     }
@@ -109,4 +111,42 @@ public class FillInForm
             pdfDocument.close();
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/49048556/pdfbox-set-field-value-doesnt-work">
+     * PDFBox set field value doesn't work
+     * </a>
+     * <br/>
+     * <a href="https://www.inps.it/Nuovoportaleinps/image.aspx?iIDModulo=7712&tipomodulo=1">
+     * SR16_ANF_DIP.pdf
+     * </a>
+     * <p>
+     * Indeed, the form field in question is hidden. Thus, one has to un-hide it
+     * to make it visible.
+     * </p>
+     */
+    @Test
+    public void testFillLikeBarbara() throws IOException
+    {
+        try (   InputStream originalStream = getClass().getResourceAsStream("SR16_ANF_DIP.pdf") )
+        {
+            PDDocument pdfDocument = PDDocument.load(originalStream);
+            PDAcroForm acroForm = pdfDocument.getDocumentCatalog().getAcroForm();
+
+            if (acroForm != null)
+            {
+                PDTextField pdfField = (PDTextField) acroForm.getField("info_15a");
+                pdfField.getWidgets().get(0).setHidden(false);// <===
+                pdfField.setValue("xxxxxx");
+            }
+
+            pdfDocument.setAllSecurityToBeRemoved(true);
+            COSDictionary dictionary = pdfDocument.getDocumentCatalog().getCOSObject();
+            dictionary.removeItem(COSName.PERMS);
+
+            pdfDocument.save(new File(RESULT_FOLDER, "SR16_ANF_DIP-filled.pdf"));
+            pdfDocument.close();
+        }
+    }
+    
 }
