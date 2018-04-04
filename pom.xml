@@ -21,7 +21,7 @@
   <properties>
     <pdfbox.version>3.0.0-SNAPSHOT</pdfbox.version>
     <bc.version>1.54</bc.version>
-    <junit.version>4.7</junit.version>
+    <junit.version>4.12</junit.version>
   </properties>
   <dependencies>
     <dependency>
