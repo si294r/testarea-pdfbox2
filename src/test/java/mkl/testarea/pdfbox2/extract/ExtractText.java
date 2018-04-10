@@ -304,4 +304,34 @@ public class ExtractText
             Files.write(new File(RESULT_FOLDER, "testFailed.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/49746202/read-pdf-file-using-pdfbox-in-utf-8-in-java-scala">
+     * Read pdf file using pdfbox in UTF-8 in java/scala
+     * </a>
+     * <br/>
+     * <a href="https://1drv.ms/b/s!AmHcFaD-gMGyhg6eyqSy2gu9sLWl">
+     * test.pdf
+     * </a> as testKabirManandhar.pdf
+     * <p>
+     * The issue can be reproduced. The cause are incomplete ToUnicode
+     * maps. There is an option, though: The embedded font programs
+     * appear to include more complete mappings, so repairing the
+     * ToUnicode table seems feasible.
+     * </p>
+     */
+    @Test
+    public void testTestKabirManandhar() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("testKabirManandhar.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* testKabirManandhar.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "testKabirManandhar.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
