@@ -91,7 +91,7 @@ public class RenderType3Character
                     PDPageContentStream charContentStream = new PDPageContentStream(charDocument, charPage);
                     charContentStream.beginText();
                     charContentStream.setFont(fontF1, bbox.getHeight());
-                    charContentStream.getOutput().write(String.format("<%2X> Tj\n", code).getBytes());
+                    charContentStream.getOutputStream().write(String.format("<%2X> Tj\n", code).getBytes());
                     charContentStream.endText();
                     charContentStream.close();
 
@@ -162,7 +162,7 @@ public class RenderType3Character
                     PDPageContentStream charContentStream = new PDPageContentStream(charDocument, charPage);
                     charContentStream.beginText();
                     charContentStream.setFont(fontF1, bbox.getHeight());
-                    charContentStream.getOutput().write(String.format("<%2X> Tj\n", code).getBytes());
+                    charContentStream.getOutputStream().write(String.format("<%2X> Tj\n", code).getBytes());
                     charContentStream.endText();
                     charContentStream.close();
 
