@@ -19,11 +19,18 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.ExternalSigningSupport;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSet;
@@ -269,4 +276,112 @@ public class CreateSignature
             throw new IOException(e);
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/49894319/lock-dictionary-in-signature-field-is-the-reason-of-broken-signature-after-sig">
+     * “Lock” dictionary in signature field is the reason of broken signature after signing
+     * </a>
+     * <p>
+     * This test shows how to properly sign signatures in a field with a
+     * signature Lock dictionary. In particular important is the addition
+     * of FieldMDP transform data to the signature value as here is done
+     * in {@link #signExistingFieldWithLock(PDDocument, OutputStream, SignatureInterface)}.
+     * </p>
+     */
+    @Test
+    public void testSignWithLocking() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("test.pdf");
+                OutputStream result = new FileOutputStream(new File(RESULT_FOLDER, "testFieldWithLocking.pdf"));
+                PDDocument pdDocument = PDDocument.load(resource)   )
+        {
+            PDAcroForm acroForm = pdDocument.getDocumentCatalog().getAcroForm();
+            if (acroForm == null)
+            {
+                acroForm = new PDAcroForm(pdDocument);
+                pdDocument.getDocumentCatalog().setAcroForm(acroForm);
+            }
+            PDSignatureField signatureField = new PDSignatureField(acroForm);
+            acroForm.getFields().add(signatureField);
+            signatureField.getWidgets().get(0).setPage(pdDocument.getPage(0));
+            pdDocument.getPage(0).getAnnotations().add(signatureField.getWidgets().get(0));
+            signatureField.getWidgets().get(0).setRectangle(new PDRectangle(100, 600, 300, 200));
+            setLock(signatureField, acroForm);
+            pdDocument.save(result);
+        }
+
+        try (   InputStream resource = new FileInputStream(new File(RESULT_FOLDER, "testFieldWithLocking.pdf"));
+                OutputStream result = new FileOutputStream(new File(RESULT_FOLDER, "testSignedWithLocking.pdf"));
+                PDDocument pdDocument = PDDocument.load(resource)   )
+        {
+            signExistingFieldWithLock(pdDocument, result, data -> signWithSeparatedHashing(data));
+        }
+}
+
+    /**
+     * <p>
+     * A minimal signing frame work merely requiring a {@link SignatureInterface}
+     * instance signing an existing field.
+     * </p>
+     * @see #testSignWithLocking()
+     */
+    void signExistingFieldWithLock(PDDocument document, OutputStream output, SignatureInterface signatureInterface) throws IOException
+    {
+        PDSignatureField signatureField = document.getSignatureFields().get(0);
+        PDSignature signature = new PDSignature();
+        signatureField.setValue(signature);
+
+        COSBase lock = signatureField.getCOSObject().getDictionaryObject(COS_NAME_LOCK);
+        if (lock instanceof COSDictionary)
+        {
+            COSDictionary lockDict = (COSDictionary) lock;
+            COSDictionary transformParams = new COSDictionary(lockDict);
+            transformParams.setItem(COSName.TYPE, COSName.getPDFName("TransformParams"));
+            transformParams.setItem(COSName.V, COSName.getPDFName("1.2"));
+            transformParams.setDirect(true);
+            COSDictionary sigRef = new COSDictionary();
+            sigRef.setItem(COSName.TYPE, COSName.getPDFName("SigRef"));
+            sigRef.setItem(COSName.getPDFName("TransformParams"), transformParams);
+            sigRef.setItem(COSName.getPDFName("TransformMethod"), COSName.getPDFName("FieldMDP"));
+            sigRef.setItem(COSName.getPDFName("Data"), document.getDocumentCatalog());
+            sigRef.setDirect(true);
+            COSArray referenceArray = new COSArray();
+            referenceArray.add(sigRef);
+            signature.getCOSObject().setItem(COSName.getPDFName("Reference"), referenceArray);
+        }
+
+        signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+        signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+        signature.setName("blablabla");
+        signature.setLocation("blablabla");
+        signature.setReason("blablabla");
+        signature.setSignDate(Calendar.getInstance());
+        document.addSignature(signature);
+        ExternalSigningSupport externalSigning =
+                document.saveIncrementalForExternalSigning(output);
+        // invoke external signature service
+        byte[] cmsSignature = signatureInterface.sign(externalSigning.getContent());
+        // set signature bytes received from the service
+        externalSigning.setSignature(cmsSignature);
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/49894319/lock-dictionary-in-signature-field-is-the-reason-of-broken-signature-after-sig">
+     * “Lock” dictionary in signature field is the reason of broken signature after signing
+     * </a>
+     * <p>
+     * This code originally was in the OP's SigningUtils class.
+     * </p>
+     */
+    public static void setLock(PDSignatureField pdSignatureField, PDAcroForm acroForm) {
+        COSDictionary lockDict = new COSDictionary();
+        lockDict.setItem(COS_NAME_ACTION, COS_NAME_ALL);
+        lockDict.setItem(COSName.TYPE, COS_NAME_SIG_FIELD_LOCK);
+        pdSignatureField.getCOSObject().setItem(COS_NAME_LOCK, lockDict);
+    }
+
+    public static final COSName COS_NAME_LOCK = COSName.getPDFName("Lock");
+    public static final COSName COS_NAME_ACTION = COSName.getPDFName("Action");
+    public static final COSName COS_NAME_ALL = COSName.getPDFName("All");
+    public static final COSName COS_NAME_SIG_FIELD_LOCK = COSName.getPDFName("SigFieldLock");
 }
