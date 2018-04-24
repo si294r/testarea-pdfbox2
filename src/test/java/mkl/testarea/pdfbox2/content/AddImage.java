@@ -88,11 +88,11 @@ public class AddImage {
             PDPage page = doc.getPage(0);
             PDPageContentStream contentStream = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, true);
 
-            float x_pos = page.getCropBox().getWidth() + page.getCropBox().getLowerLeftX();
-            float y_pos = page.getCropBox().getHeight() + page.getCropBox().getLowerLeftY();
+            float x_pos = page.getCropBox().getWidth();
+            float y_pos = page.getCropBox().getHeight();
 
-            float x_adjusted = ( x_pos - w ) / 2;
-            float y_adjusted = ( y_pos - h ) / 2;
+            float x_adjusted = ( x_pos - w ) / 2 + page.getCropBox().getLowerLeftX();
+            float y_adjusted = ( y_pos - h ) / 2 + page.getCropBox().getLowerLeftY();
 
             contentStream.drawImage(pdImage, x_adjusted, y_adjusted, w, h);
             contentStream.close();
