@@ -5,8 +5,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collections;
 
+import org.apache.pdfbox.contentstream.operator.color.SetNonStrokingColorN;
+import org.apache.pdfbox.contentstream.operator.color.SetNonStrokingColorSpace;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
@@ -15,8 +18,11 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -332,6 +338,51 @@ public class ExtractText
 
             System.out.printf("\n*\n* testKabirManandhar.pdf\n*\n%s\n", text);
             Files.write(new File(RESULT_FOLDER, "testKabirManandhar.txt").toPath(), Collections.singleton(text));
+        }
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/50044892/pdfbox-invisible-text-from-pdftextstripper-not-clip-path-or-color-issue">
+     * PDFBox: Invisible text from PdfTextStripper (not clip path or color issue)
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=1jOMq4sO393JSD60KoMX9WdzMJtY7ppze">
+     * test.pdf
+     * </a> as testSeparation.pdf
+     * <p>
+     * To retrieve the separation color values, one must tell the stripper
+     * to look for the generic color operators cs and scn.
+     * </p>
+     */
+    @Test
+    public void testTestSeparation() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("testSeparation.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper() {
+                @Override
+                protected void processTextPosition(TextPosition text) {
+                    PDGraphicsState gs = getGraphicsState();
+                    PDColor color = gs.getNonStrokingColor();
+                    float[] currentComponents = color.getComponents();
+                    if (!Arrays.equals(components, currentComponents)) {
+                        System.out.print(Arrays.toString(currentComponents));
+                        components = currentComponents;
+                    }
+                    System.out.print(text.getUnicode());
+                    super.processTextPosition(text);
+                }
+                
+                float[] components;
+            };
+            stripper.addOperator(new SetNonStrokingColorSpace());
+            stripper.addOperator(new SetNonStrokingColorN());
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* testSeparation.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "testSeparation.txt").toPath(), Collections.singleton(text));
         }
     }
 }
