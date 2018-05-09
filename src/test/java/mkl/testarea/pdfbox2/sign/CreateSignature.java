@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
@@ -384,4 +386,27 @@ public class CreateSignature
     public static final COSName COS_NAME_ACTION = COSName.getPDFName("Action");
     public static final COSName COS_NAME_ALL = COSName.getPDFName("All");
     public static final COSName COS_NAME_SIG_FIELD_LOCK = COSName.getPDFName("SigFieldLock");
+
+    /**
+     * <a href="https://stackoverflow.com/questions/50224181/pdfbox-2-0-8-issue-while-signing-document">
+     * PDFBox 2.0.8 issue while signing document
+     * </a>
+     * <p>
+     * This test checks the OP's code which essentially is a copy of the
+     * PDFBox example class CreateVisibleSignature with an extra method.
+     * </p>
+     * <p>
+     * The cause was that the OP chose a PDDocument.addSignature overload for
+     * external signing while implementing otherwise internal signing. Choosing
+     * an appropriate overload fixed the problem.
+     * </p>
+     */
+    @Test
+    public void signLikeIperezmel78() throws IOException, GeneralSecurityException {
+        try (   InputStream resource = getClass().getResourceAsStream("test.pdf")) {
+            PDDocument document = PDDocument.load(resource);
+            byte[] bytes = VisibleSignature.sign(document, KEYSTORE, PASSWORD, "/mkl/testarea/pdfbox2/content/Willi-1.jpg");
+            Files.write(new File(RESULT_FOLDER, "test-signedLikeIperezmel78.pdf").toPath(),  bytes);
+        }
+    }
 }
