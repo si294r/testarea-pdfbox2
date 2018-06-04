@@ -59,4 +59,40 @@ public class ExtractCharacterCodes {
         }
     }
 
+    /**
+     * <a href="https://stackoverflow.com/questions/50664162/some-glyph-ids-missing-while-trying-to-extract-glyph-id-from-pdf">
+     * Some glyph ID's missing while trying to extract glyph ID from pdf
+     * </a>
+     * <br/>
+     * <a href="http://1drv.ms/b/s!AmHcFaD-gMGyhkHr4PY6F4krYJ32">
+     * pattern3.pdf
+     * </a>
+     * <p>
+     * This test shows how to access the character codes of the extracted text
+     * while preventing the {@link PDFTextStripper} from doing any preprocessing
+     * steps, in particular from doing any diacritics merges.
+     * </p>
+     */
+    @Test
+    public void testExtractFromPattern3() throws IOException {
+        try (   InputStream resource = getClass().getResourceAsStream("pattern3.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper() {
+                
+                @Override
+                protected void processTextPosition(TextPosition textPosition) {
+                    try {
+                        writeString(String.format("%s%s", textPosition.getUnicode(), Arrays.toString(textPosition.getCharacterCodes())));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* pattern3.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "pattern3.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
