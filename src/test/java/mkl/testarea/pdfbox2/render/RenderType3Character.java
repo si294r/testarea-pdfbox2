@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -60,8 +62,11 @@ public class RenderType3Character
      * </p>
      */
     @Test
-    public void testRender4700198773() throws IOException
+    public void testRender4700198773() throws IOException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
     {
+        Method PDPageContentStreamWrite = PDPageContentStream.class.getSuperclass().getDeclaredMethod("write", String.class);
+        PDPageContentStreamWrite.setAccessible(true);
+
         try (   InputStream resource = getClass().getResourceAsStream("4700198773.pdf"))
         {
             PDDocument document = PDDocument.load(resource);
@@ -91,7 +96,8 @@ public class RenderType3Character
                     PDPageContentStream charContentStream = new PDPageContentStream(charDocument, charPage);
                     charContentStream.beginText();
                     charContentStream.setFont(fontF1, bbox.getHeight());
-                    charContentStream.getOutputStream().write(String.format("<%2X> Tj\n", code).getBytes());
+//                    charContentStream.write(String.format("<%2X> Tj\n", code).getBytes());
+                    PDPageContentStreamWrite.invoke(charContentStream, String.format("<%2X> Tj\n", code));
                     charContentStream.endText();
                     charContentStream.close();
 
@@ -131,8 +137,11 @@ public class RenderType3Character
      * </p>
      */
     @Test
-    public void testRenderSdnList() throws IOException
+    public void testRenderSdnList() throws IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException
     {
+        Method PDPageContentStreamWrite = PDPageContentStream.class.getSuperclass().getDeclaredMethod("write", String.class);
+        PDPageContentStreamWrite.setAccessible(true);
+
         try (   InputStream resource = getClass().getResourceAsStream("sdnlist.pdf"))
         {
             PDDocument document = PDDocument.load(resource);
@@ -162,7 +171,8 @@ public class RenderType3Character
                     PDPageContentStream charContentStream = new PDPageContentStream(charDocument, charPage);
                     charContentStream.beginText();
                     charContentStream.setFont(fontF1, bbox.getHeight());
-                    charContentStream.getOutputStream().write(String.format("<%2X> Tj\n", code).getBytes());
+                    //charContentStream.getOutputStream().write(String.format("<%2X> Tj\n", code).getBytes());
+                    PDPageContentStreamWrite.invoke(charContentStream, String.format("<%2X> Tj\n", code));
                     charContentStream.endText();
                     charContentStream.close();
 
