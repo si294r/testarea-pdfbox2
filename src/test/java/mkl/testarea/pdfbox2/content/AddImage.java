@@ -7,6 +7,7 @@ import java.io.InputStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.util.Matrix;
 import org.junit.BeforeClass;
@@ -100,6 +101,49 @@ public class AddImage {
             doc.save(new File(RESULT_FOLDER, "test-with-image-no-mirror.pdf"));
             doc.close();
 
+        }
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/50988007/clip-an-image-with-pdfbox">
+     * Clip an image with PDFBOX
+     * </a>
+     * <p>
+     * This test demonstrates how to clip an image and frame the clipping area.
+     * </p>
+     */
+    @Test
+    public void testImageAddClipped() throws IOException {
+        try (   InputStream imageResource = getClass().getResourceAsStream("Willi-1.jpg")   )
+        {
+            PDDocument doc = new PDDocument();
+            PDImageXObject pdImage = PDImageXObject.createFromByteArray(doc, ByteStreams.toByteArray(imageResource), "Willi");
+
+            int w = pdImage.getWidth();
+            int h = pdImage.getHeight();
+
+            PDPage page = new PDPage();
+            doc.addPage(page);
+            PDRectangle cropBox = page.getCropBox();
+            PDPageContentStream contentStream = new PDPageContentStream(doc, page);
+
+            contentStream.setStrokingColor(25, 200, 25);
+            contentStream.setLineWidth(4);
+            contentStream.moveTo(cropBox.getLowerLeftX(), cropBox.getLowerLeftY() + h/2);
+            contentStream.lineTo(cropBox.getLowerLeftX() + w/3, cropBox.getLowerLeftY() + 2*h/3);
+            contentStream.lineTo(cropBox.getLowerLeftX() + w, cropBox.getLowerLeftY() + h/2);
+            contentStream.lineTo(cropBox.getLowerLeftX() + w/3, cropBox.getLowerLeftY() + h/3);
+            contentStream.closePath();
+            //contentStream.clip();
+            contentStream.appendRawCommands("W ");
+            contentStream.stroke();
+
+            contentStream.drawImage(pdImage, cropBox.getLowerLeftX(), cropBox.getLowerLeftY(), w, h);
+
+            contentStream.close();
+
+            doc.save(new File(RESULT_FOLDER, "image-clipped.pdf"));
+            doc.close();
         }
     }
 }
