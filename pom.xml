@@ -72,5 +72,11 @@
       <artifactId>boxable</artifactId>
       <version>1.4</version>
     </dependency>
+
+    <dependency>
+      <groupId>net.sf.cssbox</groupId>
+      <artifactId>pdf2dom</artifactId>
+      <version>1.8-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>
