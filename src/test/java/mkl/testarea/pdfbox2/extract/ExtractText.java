@@ -385,4 +385,32 @@ public class ExtractText
             Files.write(new File(RESULT_FOLDER, "testSeparation.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/51672080/pdfdomtree-does-not-detecting-white-spaces-while-converting-a-pdf-file-to-html">
+     * PDFDomTree does not detecting white spaces while converting a pdf file to html
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/file/d/1SZNFCvGVbQzCxJiRr8HlW99ravC_Cm71/view?usp=sharing">
+     * demo.pdf
+     * </a>
+     * <p>
+     * PDFBox shows no issue extracting the text from the given file.
+     * </p>
+     */
+    @Test
+    public void testDemo() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("demo.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* demo.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "demo.txt").toPath(), Collections.singleton(text));
+        }
+    }
+
 }
