@@ -1,4 +1,3 @@
-// $Id$
 package mkl.testarea.pdfbox2.form;
 
 import java.io.File;
@@ -9,6 +8,7 @@ import java.util.List;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
@@ -148,5 +148,37 @@ public class FillInForm
             pdfDocument.close();
         }
     }
-    
+
+    /**
+     * <a href="https://stackoverflow.com/questions/52059931/pdfbox-setvalue-for-multiple-pdtextfield">
+     * PDFBox setValue for multiple PDTextField
+     * </a>
+     * <br/>
+     * <a href="https://ufile.io/z8jzj">
+     * testform.pdf
+     * </a>
+     * <p>
+     * Cannot reproduce the issue.
+     * </p>
+     */
+    @Test
+    public void testFillLikeJuvi() throws IOException {
+        try (   InputStream originalStream = getClass().getResourceAsStream("testform.pdf") ) {
+            PDDocument document = PDDocument.load(originalStream);
+            PDDocumentCatalog docCatalog = document.getDocumentCatalog();
+            PDAcroForm acroForm = docCatalog.getAcroForm();
+
+            PDTextField field = (PDTextField) acroForm.getField("Check1");
+            field.setValue("1111");
+
+            PDTextField field2 = (PDTextField) acroForm.getField("Check2");
+            field2.setValue("2222");
+
+            PDTextField field3 = (PDTextField) acroForm.getField("HelloWorld");
+            field3.setValue("HelloWorld");
+
+            document.save(new File(RESULT_FOLDER, "testform-filled.pdf"));
+            document.close();
+        }
+    }
 }
