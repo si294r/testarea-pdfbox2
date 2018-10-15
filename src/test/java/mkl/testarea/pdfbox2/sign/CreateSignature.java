@@ -409,4 +409,56 @@ public class CreateSignature
             Files.write(new File(RESULT_FOLDER, "test-signedLikeIperezmel78.pdf").toPath(),  bytes);
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/52757037/how-to-generate-pkcs7-signature-from-digest">
+     * How to generate PKCS#7 signature from digest?
+     * </a>
+     * <p>
+     * Like {@link #sign(PDDocument, OutputStream, SignatureInterface)}, merely
+     * the subfilter now indicates a PAdES signature, not a legacy ISO 32000-1
+     * signature. The generated signature is invalid as it does not have an ESS
+     * signing certificate attribute. 
+     * </p>
+     * @see #testSignPAdESWithSeparatedHashing()
+     */
+    void signPAdES(PDDocument document, OutputStream output, SignatureInterface signatureInterface) throws IOException
+    {
+        PDSignature signature = new PDSignature();
+        signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+        signature.setSubFilter(PDSignature.SUBFILTER_ETSI_CADES_DETACHED);
+        signature.setName("Example User");
+        signature.setLocation("Los Angeles, CA");
+        signature.setReason("Testing");
+        signature.setSignDate(Calendar.getInstance());
+        document.addSignature(signature);
+        ExternalSigningSupport externalSigning =
+                document.saveIncrementalForExternalSigning(output);
+        // invoke external signature service
+        byte[] cmsSignature = signatureInterface.sign(externalSigning.getContent());
+        // set signature bytes received from the service
+        externalSigning.setSignature(cmsSignature);
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/52757037/how-to-generate-pkcs7-signature-from-digest">
+     * How to generate PKCS#7 signature from digest?
+     * </a>
+     * <p>
+     * This test is like {@link #testSignWithSeparatedHashing()}, merely the
+     * subfilter now indicates a PAdES signature, not a legacy ISO 32000-1
+     * signature. The generated signature is invalid as it does not have an
+     * ESS signing certificate attribute required by PAdES.
+     * </p>
+     */
+    @Test
+    public void testSignPAdESWithSeparatedHashing() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("test.pdf");
+                OutputStream result = new FileOutputStream(new File(RESULT_FOLDER, "testSignedPAdESWithSeparatedHashing.pdf"));
+                PDDocument pdDocument = PDDocument.load(resource)   )
+        {
+            signPAdES(pdDocument, result, data -> signWithSeparatedHashing(data));
+        }
+    }
 }
