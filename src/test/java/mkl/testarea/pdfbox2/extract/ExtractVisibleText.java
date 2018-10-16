@@ -114,4 +114,33 @@ public class ExtractVisibleText {
             Files.write(new File(RESULT_FOLDER, "test2DmitryK.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="https://github.com/mkl-public/testarea-pdfbox2/issues/3">
+     * One case fails to remove invisible texts or symbols
+     * </a>
+     * <br/>
+     * <a href="https://github.com/mkl-public/testarea-pdfbox2/files/2481423/00000000000005fw6q.pdf">
+     * 00000000000005fw6q.pdf
+     * </a>
+     * <p>
+     * The "hidden text" recognized by Adobe here is only "hidden"
+     * because it uses a glyph (page 1, Font F9, code 0000) for which
+     * the embedded font draws nothing but which ToUnicode maps to
+     * U+DBD0, a High Private Use Surrogate which by itself in general
+     * makes no sense.
+     * </p>
+     */
+    @Test
+    public void test00000000000005fw6q() throws IOException {
+        try (   InputStream resource = getClass().getResourceAsStream("00000000000005fw6q.pdf")  ) {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFVisibleTextStripper();
+            stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* 00000000000005fw6q.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "00000000000005fw6q.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
