@@ -124,6 +124,53 @@ public class CreateMultipleVisualizations implements SignatureInterface {
     }
 
     /**
+     * <a href="https://stackoverflow.com/questions/52829507/multiple-esign-using-pdfbox-2-0-12-java">
+     * Multiple esign using pdfbox 2.0.12 java?
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=1DKSApmjrT424wT92yBdynKUkvR00x9i2">
+     * C10000000713071804294534.pdf
+     * </a>
+     * <p>
+     * This test demonstrates how to create a single signature in multiple signature
+     * fields with one widget annotation each only referenced from a single page each
+     * only. (Actually there is an extra invisible signature; it is possible to get
+     * rid of it with some more code.) It uses the test file provided by the OP.
+     * </p>
+     */
+    @Test
+    public void testCreateSignatureWithMultipleVisualizationsC10000000713071804294534() throws IOException {
+        try (   InputStream resource = getClass().getResourceAsStream("C10000000713071804294534.pdf");
+                OutputStream result = new FileOutputStream(new File(RESULT_FOLDER, "C10000000713071804294534-SignedMultipleVisualizations.pdf"));
+                PDDocument pdDocument = PDDocument.load(resource)   )
+        {
+            PDAcroForm acroForm = pdDocument.getDocumentCatalog().getAcroForm();
+            if (acroForm == null) {
+                pdDocument.getDocumentCatalog().setAcroForm(acroForm = new PDAcroForm(pdDocument));
+            }
+            acroForm.setSignaturesExist(true);
+            acroForm.setAppendOnly(true);
+            acroForm.getCOSObject().setDirect(true);
+
+            PDRectangle rectangle = new PDRectangle(100, 600, 300, 100);
+            PDSignature signature = new PDSignature();
+            signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
+            signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
+            signature.setName("Example User");
+            signature.setLocation("Los Angeles, CA");
+            signature.setReason("Testing");
+            signature.setSignDate(Calendar.getInstance());
+            pdDocument.addSignature(signature, this);
+
+            for (PDPage pdPage : pdDocument.getPages()) {
+                addSignatureField(pdDocument, pdPage, rectangle, signature);
+            }
+
+            pdDocument.saveIncremental(result);
+        }
+    }
+
+    /**
      * Based on <code>org.apache.pdfbox.examples.signature.CreateVisibleSignature2.createVisualSignatureTemplate(PDDocument, int, PDRectangle)</code>
      * from the pdfbox examples artifact but severely simplified and now used as a method to create the actual signature fields, not merely a template.
      */
