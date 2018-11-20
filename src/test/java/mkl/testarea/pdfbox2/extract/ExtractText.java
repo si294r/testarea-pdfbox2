@@ -1,4 +1,3 @@
-// $Id$
 package mkl.testarea.pdfbox2.extract;
 
 import java.io.File;
@@ -413,4 +412,30 @@ public class ExtractText
         }
     }
 
+    /**
+     * <a href="https://stackoverflow.com/questions/53382793/java-8-pdfbox-cant-gettext-of-pdf-file">
+     * Java 8 PDFbox can't getText of pdf file
+     * </a>
+     * <br/>
+     * <a href="http://www.o-cha.net/english/cup/pdf/29.pdf">
+     * 29.pdf
+     * </a>
+     * <p>
+     * Cannot reproduce any issue.
+     * </p>
+     */
+    @Test
+    public void test29() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("29.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* 29.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "29.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
