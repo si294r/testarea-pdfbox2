@@ -22,6 +22,7 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -408,6 +409,53 @@ public class OptimizeAfterMerge {
             if (result == 0)
                 result = Integer.compare(hashCode(), o.hashCode());
             return result;
+        }
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/53420344/ho-to-reduce-the-size-of-merged-pdf-a1-b-files-with-pdfbox-or-other-java-library">
+     * Ho to reduce the size of merged PDF A1/b Files with pdfbox or other java library
+     * </a>
+     * <br/>
+     * <a href="https://datentransfer.sparkassenverlag.de/my/transfers/5q8eskgne52npemx8kid7728zk1hq3f993dfat8his">
+     * dummy.pdf
+     * </a>
+     * <p>
+     * This is the code the OP himself posted as his solution. This only works if
+     * (a) all font programs embedded for the same name indeed are identical, and
+     * if (b) all fonts to consider are in the immediate page resources, not the
+     * resources of some referred to xobject or pattern. If those conditions are
+     * fulfilled, though, it very likely is much faster than the approach in
+     * {@link #optimize(PDDocument)}. For the example file provided by the OP,
+     * its result is nearly as small.
+     * </p>
+     */
+    @Test
+    public void testOptimizeLikeSchowaveDummy() throws IOException {
+        try (   InputStream resource = getClass().getResourceAsStream("dummy.pdf")  ) {
+            PDDocument doc = PDDocument.load(resource);
+
+            Map<String, COSBase> fontFileCache = new HashMap<>();
+            for (int pageNumber = 0; pageNumber < doc.getNumberOfPages(); pageNumber++) {
+                final PDPage page = doc.getPage(pageNumber);
+                COSDictionary pageDictionary = (COSDictionary) page.getResources().getCOSObject().getDictionaryObject(COSName.FONT);
+                for (COSName currentFont : pageDictionary.keySet()) {
+                    COSDictionary fontDictionary = (COSDictionary) pageDictionary.getDictionaryObject(currentFont);
+                    for (COSName actualFont : fontDictionary.keySet()) {
+                        COSBase actualFontDictionaryObject = fontDictionary.getDictionaryObject(actualFont);
+                        if (actualFontDictionaryObject instanceof COSDictionary) {
+                            COSDictionary fontFile = (COSDictionary) actualFontDictionaryObject;
+                            if (fontFile.getItem(COSName.FONT_NAME) instanceof COSName) {
+                                COSName fontName = (COSName) fontFile.getItem(COSName.FONT_NAME);
+                                fontFileCache.computeIfAbsent(fontName.getName(), key -> fontFile.getItem(COSName.FONT_FILE2));
+                                fontFile.setItem(COSName.FONT_FILE2, fontFileCache.get(fontName.getName()));
+                            }
+                        }
+                    }
+                }
+            }
+
+            doc.save(new File(RESULT_FOLDER, "dummy-optimized-like-schowave.pdf"));
         }
     }
 }
