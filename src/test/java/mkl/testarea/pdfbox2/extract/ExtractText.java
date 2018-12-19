@@ -438,4 +438,34 @@ public class ExtractText
             Files.write(new File(RESULT_FOLDER, "29.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/53551335/java-does-pdfbox-have-an-option-to-open-file-instead-of-loading-it">
+     * Java- Does pdfBox have an option to open file instead of loading it?
+     * </a>
+     * <br/>
+     * <a href="https://www.dropbox.com/s/osyk2ieoq6od2p8/10-million-password-list-top-1000000.pdf?dl=0">
+     * 10-million-password-list-top-1000000.pdf
+     * </a>
+     * <p>
+     * In contrast to the OP I did not need to fiddle with the memory
+     * settings at all for a plain extraction. Furthermore, I got 999999
+     * lines with words and 3 empty lines from the file, not 10000000
+     * passwords.
+     * </p>
+     */
+    @Test
+    public void test10MillionPasswordListTop1000000() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("10-million-password-list-top-1000000.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* 10-million-password-list-top-1000000.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "10-million-password-list-top-1000000.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
