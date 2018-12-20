@@ -468,4 +468,88 @@ public class ExtractText
             Files.write(new File(RESULT_FOLDER, "10-million-password-list-top-1000000.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/53837294/performance-for-loading-pdf-using-pdfbox">
+     * Performance for loading pdf using PDFBox
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/drive/folders/1KW5tVtF1gtcPNv2R7pIdDFMph8FhafT2?usp=sharing">
+     * 284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V1.pdf
+     * </a>
+     * <p>
+     * I cannot reproduce the enormous time required for text
+     * extraction claimed by the OP.
+     * </p>
+     * @see #test284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2()
+     */
+    @Test
+    public void test284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V1() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V1.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* 284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V1.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V1.txt").toPath(), Collections.singleton(text));
+        }
+
+        int runs = 10;
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < runs; i++) {
+            try (   InputStream resource = getClass().getResourceAsStream("284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V1.pdf")    )
+            {
+                PDDocument document = PDDocument.load(resource);
+                PDFTextStripper stripper = new PDFTextStripper();
+                stripper.getText(document);
+            }
+        }
+        long duration = System.currentTimeMillis() - start;
+        System.out.printf("\nExtract %d times from '284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V1.pdf' took %dms.\n", runs, duration);
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/53837294/performance-for-loading-pdf-using-pdfbox">
+     * Performance for loading pdf using PDFBox
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/drive/folders/1KW5tVtF1gtcPNv2R7pIdDFMph8FhafT2?usp=sharing">
+     * 284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2.pdf
+     * </a>
+     * <p>
+     * I cannot reproduce the enormous time required for text
+     * extraction claimed by the OP.
+     * </p>
+     * @see #test284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V1()
+     */
+    @Test
+    public void test284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            //stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* 284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2.txt").toPath(), Collections.singleton(text));
+        }
+
+        int runs = 10;
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < runs; i++) {
+            try (   InputStream resource = getClass().getResourceAsStream("284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2.pdf")    )
+            {
+                PDDocument document = PDDocument.load(resource);
+                PDFTextStripper stripper = new PDFTextStripper();
+                stripper.getText(document);
+            }
+        }
+        long duration = System.currentTimeMillis() - start;
+        System.out.printf("\nExtract %d times from '284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2.pdf' took %dms.\n", runs, duration);
+    }
 }
