@@ -552,4 +552,40 @@ public class ExtractText
         long duration = System.currentTimeMillis() - start;
         System.out.printf("\nExtract %d times from '284527_7605_CDM_PALET_MEDITERRANEEN_SURGELE_300G_FR_V2.pdf' took %dms.\n", runs, duration);
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/53773479/java-rotated-file-extraction">
+     * java- rotated file extraction?
+     * </a>
+     * <br/>
+     * <a href="https://www.dropbox.com/s/g1pe8zb9m5kajif/lol.pdf?dl=0">
+     * lol.pdf
+     * </a>
+     * <p>
+     * Indeed, regular text extraction results on many lines, essentially
+     * one for each text chunk. One can improve this in two ways, either
+     * one activates sorting or one removes the Rotate entries from the
+     * page dictionaries.
+     * </p>
+     */
+    @Test
+    public void testLol() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("lol.pdf")    )
+        {
+            PDDocument document = PDDocument.load(resource);
+// Option 1: Remove Rotate entries
+//            for (PDPage page : document.getPages()) {
+//                page.setRotation(0);
+//            }
+
+            PDFTextStripper stripper = new PDFTextStripper();
+// Option 2: Sort by position
+            stripper.setSortByPosition(true);
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* lol.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "lol.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
