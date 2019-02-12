@@ -588,4 +588,32 @@ public class ExtractText
             Files.write(new File(RESULT_FOLDER, "lol.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/54644435/error-when-extracting-text-from-pdf-using-pdfbox">
+     * Error when extracting text from pdf using pdfbox
+     * </a>
+     * <br/>
+     * <a href="http://ishouhuo.cn/cannotExtract.pdf">
+     * cannotExtract.pdf
+     * </a>
+     * <p>
+     * Indeed, all required information for text extraction are missing from the font
+     * PingFangSC in all its variants. Thus, text extraction results automatically are
+     * lacking.
+     * </p>
+     */
+    @Test
+    public void testCannotExtract() throws IOException
+    {
+        try (   InputStream resource = getClass().getResourceAsStream("cannotExtract.pdf")    )
+        {
+            PDDocument document =  PDDocument.load(resource);
+            PDFTextStripper stripper = new PDFTextStripper();
+            String text = stripper.getText(document);
+
+            System.out.printf("\n*\n* cannotExtract.pdf\n*\n%s\n", text);
+            Files.write(new File(RESULT_FOLDER, "cannotExtract.txt").toPath(), Collections.singleton(text));
+        }
+    }
 }
