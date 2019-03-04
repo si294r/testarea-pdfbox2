@@ -122,4 +122,39 @@ public class ExtractBoxedText {
             }
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/54956720/how-to-replace-a-space-with-a-word-while-extract-the-data-from-pdf-using-pdfbox">
+     * How to replace a space with a word while extract the data from PDF using PDFBox
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=10ZkdPlGWzMJeahwnQPzE6V7s09d1nvwq">
+     * test.pdf
+     * </a> as "testWPhromma.pdf"
+     * <p>
+     * The {@link PdfBoxFinder} can be used out of the box here.
+     * </p>
+     */
+    @Test
+    public void testExtractBoxedTextsTestWPhromma() throws IOException {
+        try (   InputStream resource = getClass().getResourceAsStream("testWPhromma.pdf");
+                PDDocument document = PDDocument.load(resource) ) {
+            for (PDPage page : document.getDocumentCatalog().getPages()) {
+                PdfBoxFinder boxFinder = new PdfBoxFinder(page);
+                boxFinder.processPage(page);
+
+                PDFTextStripperByArea stripperByArea = new PDFTextStripperByArea();
+                for (Map.Entry<String, Rectangle2D> entry : boxFinder.getRegions().entrySet()) {
+                    stripperByArea.addRegion(entry.getKey(), entry.getValue());
+                }
+
+                stripperByArea.extractRegions(page);
+                List<String> names = stripperByArea.getRegions();
+                names.sort(null);
+                for (String name : names) {
+                    System.out.printf("[%s] %s\n", name, stripperByArea.getTextForRegion(name));
+                }
+            }
+        }
+    }
 }
