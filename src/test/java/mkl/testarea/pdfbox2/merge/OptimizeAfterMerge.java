@@ -64,6 +64,30 @@ public class OptimizeAfterMerge {
     }
 
     /**
+     * <a href="https://stackoverflow.com/questions/54978922/why-compress-pdf-programatically-is-undocumented-and-difficult">
+     * why compress pdf programatically is undocumented and difficult
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=1K5gPlB1JbytWj7KMD4V09aU2R6jFoym-">
+     * merged.pdf
+     * </a> as "mergedBee.pdf".
+     * <p>
+     * {@link #optimize(PDDocument)} compresses the 1.4MB source file
+     * to 250KB. 
+     * </p>
+     */
+    @Test
+    public void testOptimizeMergedBee() throws IOException {
+        try (   InputStream resource = getClass().getResourceAsStream("mergedBee.pdf")  ) {
+            PDDocument pdDocument = PDDocument.load(resource);
+
+            optimize(pdDocument);
+
+            pdDocument.save(new File(RESULT_FOLDER, "mergedBee-optimized.pdf"));
+        }
+    }
+
+    /**
      * <a href="https://stackoverflow.com/questions/53420344/ho-to-reduce-the-size-of-merged-pdf-a1-b-files-with-pdfbox-or-other-java-library">
      * Ho to reduce the size of merged PDF A1/b Files with pdfbox or other java library
      * </a>
