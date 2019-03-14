@@ -716,5 +716,75 @@ public class ExtractText
             System.out.println(" String Matches equals with Both Content : " + text.equalsIgnoreCase(text2));
         }
     }
-    
+
+    /**
+     * <a href="https://stackoverflow.com/questions/55154930/unable-to-extract-values-from-pdf-for-specific-coordinates-using-java-apache-pdf">
+     * Unable to extract values from PDF for specific coordinates using java apache pdfbox
+     * </a>
+     * <br/>
+     * <a href="https://www.tutorialspoint.com/uipath/uipath_tutorial.pdf">
+     * uipath_tutorial.pdf
+     * </a>
+     * <p>
+     * Cannot reproduce the issue. I retrieve more than the text "a part of contests"
+     * but considering the width and height that is not surprising. 
+     * </p>
+     */
+    @Test
+    public void testUiPathTutorial() throws IOException {
+        System.out.println("Extracting like Venkatachalam Neelakantan from uipath_tutorial.pdf\n");
+        float MM_TO_UNITS = 1/(10*2.54f)*72;
+        String text = getTextUsingPositionsUsingPdf("src/test/resources/mkl/testarea/pdfbox2/extract/uipath_tutorial.pdf",
+                0, 55.6 * MM_TO_UNITS, 168.8 * MM_TO_UNITS, 210.0 * MM_TO_UNITS, 297.0 * MM_TO_UNITS);
+        System.out.printf("\n---\nResult:\n%s\n", text);
+    }
+
+    /**
+     * @see #testUiPathTutorial()
+     * @author Venkatachalam Neelakantan
+     */
+    public String getTextUsingPositionsUsingPdf(String pdfLocation, int pageNumber, double x, double y, double width,
+            double height) throws IOException {
+        String extractedText = "";
+        // PDDocument Creates an empty PDF document. You need to add at least
+        // one page for the document to be valid.
+        // Using load method we can load a PDF document
+        PDDocument document = null;
+        PDPage page = null;
+        try {
+            if (pdfLocation.endsWith(".pdf")) {
+                document = PDDocument.load(new File(pdfLocation));
+                int getDocumentPageCount = document.getNumberOfPages();
+                System.out.println(getDocumentPageCount);
+
+                // Get specific page. THe parameter is pageindex which starts with // 0. If we need to
+                // access the first page then // the pageIdex is 0 PDPage
+                if (getDocumentPageCount > 0) {
+                    page = document.getPage(pageNumber + 1);
+                } else if (getDocumentPageCount == 0) {
+                    page = document.getPage(0);
+                }
+                // To create a rectangle by passing the x axis, y axis, width and height 
+                Rectangle2D rect = new Rectangle2D.Double(x, y, width, height);
+                String regionName = "region1";
+
+                // Strip the text from PDF using PDFTextStripper Area with the
+                // help of Rectangle and named need to given for the rectangle
+                PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+                stripper.setSortByPosition(true);
+                stripper.addRegion(regionName, rect);
+                stripper.extractRegions(page);
+                System.out.println("Region is " + stripper.getTextForRegion("region1"));
+                extractedText = stripper.getTextForRegion("region1");
+            } else {
+                System.out.println("No data return");
+            }
+        } catch (IOException e) {
+            System.out.println("The file  not found" + "");
+        } finally {
+            document.close();
+        }
+        // Return the extracted text and this can be used for assertion
+        return extractedText;
+    }
 }
