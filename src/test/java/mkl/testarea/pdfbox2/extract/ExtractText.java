@@ -1,5 +1,7 @@
 package mkl.testarea.pdfbox2.extract;
 
+import java.awt.Dimension;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,11 +18,13 @@ import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.apache.pdfbox.text.TextPosition;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -616,4 +620,101 @@ public class ExtractText
             Files.write(new File(RESULT_FOLDER, "cannotExtract.txt").toPath(), Collections.singleton(text));
         }
     }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/54822124/pdftextstripperbyarea-and-pdftextstripper-parsing-different-text-output-for-tabl">
+     * PDFTextStripperByArea and PDFTextStripper parsing different Text Output for Table with Merged Cell or Table cell with multi-line text content
+     * </a>
+     * <br/>
+     * <a href="https://www4.esc13.net/uploads/webccat/docs/PDFTables_12142005.pdf">
+     * PDFTables_12142005.pdf
+     * </a>
+     * <p>
+     * Cannot reproduce the problem, and the OP does not react to clarification requests.
+     * </p>
+     */
+    @Test
+    public void testPDFTables_12142005() throws IOException {
+        try (   InputStream resource = getClass().getResourceAsStream("PDFTables_12142005.pdf")    )
+        {
+            PDDocument document =  PDDocument.load(resource);
+
+            PDFTextStripper textStripper = new PDFTextStripper();
+            textStripper.setSortByPosition(true);
+            textStripper.setAddMoreFormatting(false);
+            // textStripper.setSpacingTolerance(1.5F);
+            //textStripper.setAverageCharTolerance(averageCharToleranceValue);
+
+            textStripper.setStartPage(2);
+            textStripper.setEndPage(2);
+
+            textStripper.getCurrentPage();
+            String text = textStripper.getText(document).trim();
+            System.out.println("PDF text is: " + "\n" + text.trim());
+
+            System.out.println("----------------------------------------------------------------");
+
+            PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+            stripper.setSortByPosition(true);
+            stripper.setAddMoreFormatting(false);
+            // stripper.setSpacingTolerance(1.5F);
+
+            Dimension dimension = new Dimension();
+            dimension.setSize(document.getPage(1).getMediaBox().getWidth(),
+                    document.getPage(1).getMediaBox().getHeight());
+//            Rectangle2D rect = toJavaRect(document.getBleedBox(), dimension);
+//            Rectangle2D rect1 = toJavaRect(document.getArtBox(), dimension);
+            PDRectangle mediaBox = document.getPage(1).getMediaBox();
+            Rectangle2D rect = new Rectangle2D.Float(mediaBox.getLowerLeftX(), mediaBox.getLowerLeftY(), mediaBox.getWidth(), mediaBox.getHeight());
+            Rectangle2D rect1 = rect;
+
+            /*
+             * Rectangle2D rect = new
+             * Rectangle2D.Float(document.getBleedBox().getLowerLeftX(),
+             * document.getBleedBox().getLowerLeftY(), document.getBleedBox().getWidth(),
+             * document.getBleedBox().getHeight());
+             */
+
+            /*
+             * Rectangle2D rect1 = new
+             * Rectangle2D.Float(document.getArtBox().getLowerLeftX(),
+             * document.getArtBox().getLowerLeftY(), document.getArtBox().getWidth(),
+             * document.getArtBox().getHeight());
+             */
+
+            /*
+             * Rectangle2D rect = new
+             * Rectangle2D.Float(document.getBleedBox().getLowerLeftX(),
+             * document.getBleedBox().getUpperRightY(), document.getBleedBox().getWidth(),
+             * document.getBleedBox().getHeight());
+             */
+
+            System.out.println("Rectangle bleedBox Content : " + "\n" + rect);
+            System.out.println("----------------------------------------------------------------");
+            System.out.println("Rectangle artBox Content : " + "\n" + rect1);
+            System.out.println("----------------------------------------------------------------");
+            stripper.addRegion("Test1", rect);
+            stripper.addRegion("Test2", rect1);
+            stripper.extractRegions(document.getPage(1));
+
+            System.out.println("Text in the area-BleedBox : " + "\n" + stripper.getTextForRegion("Test1").trim());
+            System.out.println("----------------------------------------------------------------");
+            System.out.println("Text in the area1-ArtBox : " + "\n" + stripper.getTextForRegion("Test2").trim());
+            System.out.println("----------------------------------------------------------------");
+            String str = stripper.getTextForRegion("Test2").trim();
+
+            StringBuilder artPlusBleedBox = new StringBuilder();
+            artPlusBleedBox.append(stripper.getTextForRegion("Test2").trim());
+            artPlusBleedBox.append("\r\n");
+            artPlusBleedBox.append(stripper.getTextForRegion("Test1").trim());
+
+            System.out.println("Whole Page Text : " + artPlusBleedBox);
+            System.out.println("----------------------------------------------------------------");
+            text = new String(text.trim().getBytes(), "UTF-8");
+            String text2 = new String(artPlusBleedBox.toString().trim().getBytes(), "UTF-8");
+            System.out.println(" Matches equals with Both Content : " + text.equals(artPlusBleedBox.toString()));
+            System.out.println(" String Matches equals with Both Content : " + text.equalsIgnoreCase(text2));
+        }
+    }
+    
 }
