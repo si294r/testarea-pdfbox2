@@ -8,6 +8,8 @@ import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
@@ -122,6 +124,124 @@ public class CopyForm
                     newField.setValue("TEST");
                 }
             }
+        }
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/55416144/search-used-resources-through-page-and-remove-them">
+     * search used resources through page and remove them
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=15tW_o8A3inEHPRVPXyjXqqEX3zNsgwWf">
+     * form.pdf
+     * </a> as "formBee3.pdf".
+     * <p>
+     * Indeed, the result is not smaller than the source. But see
+     * {@link #testCopyLikeBeeImproved()}.
+     * </p>
+     */
+    @Test
+    public void testCopyLikeBee() throws IOException
+    {
+        try (   InputStream originalStream = getClass().getResourceAsStream("formBee3.pdf") )
+        {
+            PDDocument documentSrc = PDDocument.load(originalStream);;
+            PDAcroForm acroFormSrc = documentSrc.getDocumentCatalog().getAcroForm();
+
+            PDDocument documentDest = new PDDocument();
+            for (PDPage page : documentSrc.getPages()) {
+                PDPage destPage  = new PDPage(PDRectangle.A4);
+                destPage.setMediaBox(page.getMediaBox());
+                destPage.setCropBox(page.getCropBox());
+                documentDest.addPage(destPage);
+            }
+
+            PDAcroForm acroFormDest = new PDAcroForm(documentDest);
+
+
+            acroFormDest.setCacheFields(true);
+            acroFormDest.setFields(acroFormSrc.getFields());
+            documentDest.getDocumentCatalog().setAcroForm(acroFormDest);
+
+            int pageIndex = 0;
+            for (PDPage page : documentSrc.getPages()) {
+                documentDest.getPage(pageIndex).setAnnotations(page.getAnnotations());
+                // after disabling this size increase
+                //documentDest.getPage(pageIndex).setResources(page.getResources());
+                pageIndex++;
+            }
+
+            acroFormDest.setDefaultAppearance(acroFormSrc.getDefaultAppearance());
+            acroFormDest.setDefaultResources(acroFormSrc.getDefaultResources());
+            acroFormDest.setQ(acroFormSrc.getQ());
+
+            // this is disabled because setResources is disabled above
+            //removeLinksInPages(documentDest);
+            //removeTextInDocument(documentDest);
+            documentDest.save(new File(RESULT_FOLDER, "formBee3-Copied.pdf"));
+            documentDest.close();
+            documentSrc.close();
+        }
+    }
+
+    /**
+     * <a href="https://stackoverflow.com/questions/55416144/search-used-resources-through-page-and-remove-them">
+     * search used resources through page and remove them
+     * </a>
+     * <br/>
+     * <a href="https://drive.google.com/open?id=15tW_o8A3inEHPRVPXyjXqqEX3zNsgwWf">
+     * form.pdf
+     * </a> as "formBee3.pdf".
+     * <p>
+     * In contrast to the OP's code {@link #testCopyLikeBee()}
+     * here we also set the page of the annotation correctly.
+     * The result is much smaller
+     * </p>
+     */
+    @Test
+    public void testCopyLikeBeeImproved() throws IOException
+    {
+        try (   InputStream originalStream = getClass().getResourceAsStream("formBee3.pdf") )
+        {
+            PDDocument documentSrc = PDDocument.load(originalStream);;
+            PDAcroForm acroFormSrc = documentSrc.getDocumentCatalog().getAcroForm();
+
+            PDDocument documentDest = new PDDocument();
+            for (PDPage page : documentSrc.getPages()) {
+                PDPage destPage  = new PDPage(PDRectangle.A4);
+                destPage.setMediaBox(page.getMediaBox());
+                destPage.setCropBox(page.getCropBox());
+                documentDest.addPage(destPage);
+            }
+
+            PDAcroForm acroFormDest = new PDAcroForm(documentDest);
+
+
+            acroFormDest.setCacheFields(true);
+            acroFormDest.setFields(acroFormSrc.getFields());
+            documentDest.getDocumentCatalog().setAcroForm(acroFormDest);
+
+            int pageIndex = 0;
+            for (PDPage page : documentSrc.getPages()) {
+                PDPage destPage = documentDest.getPage(pageIndex);
+                destPage.setAnnotations(page.getAnnotations());
+                for (PDAnnotation annotation : destPage.getAnnotations())
+                    annotation.setPage(destPage);
+                // after disabling this size increase
+                //documentDest.getPage(pageIndex).setResources(page.getResources());
+                pageIndex++;
+            }
+
+            acroFormDest.setDefaultAppearance(acroFormSrc.getDefaultAppearance());
+            acroFormDest.setDefaultResources(acroFormSrc.getDefaultResources());
+            acroFormDest.setQ(acroFormSrc.getQ());
+
+            // this is disabled because setResources is disabled above
+            //removeLinksInPages(documentDest);
+            //removeTextInDocument(documentDest);
+            documentDest.save(new File(RESULT_FOLDER, "formBee3-Copied-Improved.pdf"));
+            documentDest.close();
+            documentSrc.close();
         }
     }
 }
