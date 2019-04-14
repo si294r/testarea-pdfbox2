@@ -4,6 +4,7 @@ package mkl.testarea.pdfbox2.analyze;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import org.apache.pdfbox.contentstream.PDContentStream;
 
 import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.pdfparser.PDFStreamParser;
@@ -37,7 +38,7 @@ public class TestGraphicsCounter
             PDDocument document = PDDocument.load(resource);
 
             PDPage page = document.getPage(4);
-            PDFStreamParser parser = new PDFStreamParser(page.getContents());
+            PDFStreamParser parser = new PDFStreamParser(page);
             parser.parse();
             List<Object> tokens = parser.getTokens();
             int lines=0;
